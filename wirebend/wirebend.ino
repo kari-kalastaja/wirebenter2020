@@ -30,6 +30,25 @@ void rotate_feeder_motor(int dir, int steps, int motor_speed){
     digitalWrite(feeder_stepPin, LOW);
     delayMicroseconds(motor_speed);
   }
+}
+
+
+//santerin cooodia
+void rotate_bend_motor(int dir, int degree, int motor_speed){
+
+/*
+  digitalWrite(feeder_dirPin, dir);
+  
+  for (int i = 0; i < steps; i++) {
+    // These four lines result in 1 step:
+    digitalWrite(feeder_stepPin, HIGH);
+    delayMicroseconds(motor_speed);
+    digitalWrite(feeder_stepPin, LOW);
+    delayMicroseconds(motor_speed);
+  }
+
+  */
+
   
 }
 
@@ -85,7 +104,30 @@ void loop() {
        Serial.println(substring);
        
        Serial.println("ok");
+
+       //rotataattee moottorea
        rotate_feeder_motor(1, substring.toInt(), 2000);
+      
+    }
+
+    //example command: bend 1 90
+    //kääntää 90 astetta oikealle
+    
+     else if(inputString.indexOf("bend") != -1){
+
+     String direction_substring = inputString.substring(5,6);
+     String degree_substring = inputString.substring(7);
+
+     Serial.println("direction value is:");
+     Serial.println(direction_substring);
+
+     Serial.println("degree value is:");
+     Serial.println(degree_substring);
+       
+     Serial.println("ok");
+
+     //rotataattee moottorea
+     rotate_bend_motor(direction_substring.toInt(), degree_substring.toInt(), 2000);
       
     }
     
