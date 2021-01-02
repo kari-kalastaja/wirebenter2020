@@ -4,10 +4,14 @@
 String inputString = "";         // a String to hold incoming data
 bool stringComplete = false;  // whether the string is complete
 
-#define feeder_dirPin 2
-#define feeder_stepPin 3
+#define feeder_dirPin 3
+#define feeder_stepPin 4
 #define feeder_stepsPerRevolution 200
 
+const int rotatorStepPin = 5; 
+const int rotatorDirPin = 6; 
+
+const int solenoidPin = 2;
 
 void setup() {
   // put your setup code here, to run once:
@@ -15,6 +19,10 @@ void setup() {
 
   pinMode(feeder_dirPin, OUTPUT);
   pinMode(feeder_stepPin, OUTPUT);
+
+  pinMode(solenoidPin, OUTPUT);
+  pinMode(rotatorStepPin, OUTPUT);
+  pinMode(rotatorDirPin, OUTPUT);
 
 }
 
@@ -32,23 +40,23 @@ void rotate_feeder_motor(int dir, int steps, int motor_speed){
   }
 }
 
+void rotate_bend_motor(int degNum){
 
-//santerin cooodia
-void rotate_bend_motor(int dir, int degree, int motor_speed){
-
-/*
-  digitalWrite(feeder_dirPin, dir);
-  
-  for (int i = 0; i < steps; i++) {
-    // These four lines result in 1 step:
-    digitalWrite(feeder_stepPin, HIGH);
-    delayMicroseconds(motor_speed);
-    digitalWrite(feeder_stepPin, LOW);
-    delayMicroseconds(motor_speed);
+  int steps = degNum / 1.8;
+  if(degNum > 0){
+    digitalWrite(rotatorDirPin, HIGH);
   }
-
-  */
-
+  else{
+    steps = steps * -1;
+    digitalWrite(rotatorDirPin, LOW);
+  }
+  for(int x = 0; x < steps; x++){
+    digitalWrite(rotatorStepPin,HIGH); 
+    delayMicroseconds(500); 
+    digitalWrite(rotatorStepPin,LOW); 
+    delayMicroseconds(500); 
+  }
+  digitalWrite(rotatorDirPin, LOW);
   
 }
 
@@ -66,6 +74,10 @@ void serialEvent() {
       stringComplete = true;
     }
   }
+}
+
+void Solenoid(bool state){
+  digitalWrite(solenoidPin, state);
 }
 
 
@@ -110,24 +122,20 @@ void loop() {
       
     }
 
-    //example command: bend 1 90
+    //example command: bend 90
     //kääntää 90 astetta oikealle
+    // bend -90 kääntää vasemmalle
     
      else if(inputString.indexOf("bend") != -1){
 
-     String direction_substring = inputString.substring(5,6);
-     String degree_substring = inputString.substring(7);
-
-     Serial.println("direction value is:");
-     Serial.println(direction_substring);
+     String degree_substring = inputString.substring(5);
 
      Serial.println("degree value is:");
      Serial.println(degree_substring);
        
      Serial.println("ok");
-
-     //rotataattee moottorea
-     rotate_bend_motor(direction_substring.toInt(), degree_substring.toInt(), 2000);
+     
+     rotate_bend_motor(degree_substring.toInt());
       
     }
     
