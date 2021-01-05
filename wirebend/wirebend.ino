@@ -1,48 +1,66 @@
 
-
+#include <Servo.h>
+Servo benderServo;
 
 String inputString = "";         // a String to hold incoming data
 bool stringComplete = false;  // whether the string is complete
 
-#define feeder_dirPin 3
-#define feeder_stepPin 4
+#define feeder_dirPin 4
+#define feeder_stepPin 3
 #define feeder_stepsPerRevolution 200
+#define degreeMultiplier 1.8
 
 const int rotatorStepPin = 5; 
 const int rotatorDirPin = 6; 
 
-const int solenoidPin = 2;
+//const int solenoidPin = 2;
+const int servoPin = 9;
+int servoDownValue = 100;
 
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(115200);
 
   pinMode(feeder_dirPin, OUTPUT);
   pinMode(feeder_stepPin, OUTPUT);
 
-  pinMode(solenoidPin, OUTPUT);
+  //pinMode(solenoidPin, OUTPUT);
   pinMode(rotatorStepPin, OUTPUT);
   pinMode(rotatorDirPin, OUTPUT);
+  //Solenoid(HIGH);
+  ServoState(false);
+
+  benderServo.attach(9);
 
 }
 
+void rotate_feeder_motor(int steps){
 
-void rotate_feeder_motor(int dir, int steps, int motor_speed){
+  delay(100);
 
-  digitalWrite(feeder_dirPin, dir);
-  
-  for (int i = 0; i < steps; i++) {
-    // These four lines result in 1 step:
-    digitalWrite(feeder_stepPin, HIGH);
-    delayMicroseconds(motor_speed);
-    digitalWrite(feeder_stepPin, LOW);
-    delayMicroseconds(motor_speed);
+  if(steps>0){
+    digitalWrite(feeder_dirPin, LOW);
   }
+  else{
+    steps=steps*-1;
+    digitalWrite(feeder_dirPin, HIGH);
+  }
+  for (int i = 0; i < steps; i++) {
+    digitalWrite(feeder_stepPin, HIGH);
+    delayMicroseconds(2000);
+    digitalWrite(feeder_stepPin, LOW);
+    delayMicroseconds(2000);
+  }
+  digitalWrite(feeder_dirPin, LOW);
+
 }
 
 void rotate_bend_motor(int degNum){
 
-  int steps = degNum / 1.8;
+  //Solenoid(LOW);
+  ServoState(true);
+  delay(300);
+  
+  int steps = degNum * degreeMultiplier;
   if(degNum > 0){
     digitalWrite(rotatorDirPin, HIGH);
   }
@@ -52,14 +70,39 @@ void rotate_bend_motor(int degNum){
   }
   for(int x = 0; x < steps; x++){
     digitalWrite(rotatorStepPin,HIGH); 
-    delayMicroseconds(500); 
+    delayMicroseconds(2000); 
     digitalWrite(rotatorStepPin,LOW); 
-    delayMicroseconds(500); 
+    delayMicroseconds(2000); 
+  }
+  digitalWrite(rotatorDirPin, LOW);
+
+  //Solenoid(HIGH);
+  ServoState(false);
+  delay(200);
+
+  //move_bend_motor((degNum*(-1))/1);
+  //move_bend_motor(degNum+30);
+}
+
+void move_bend_motor(int degNum){
+  
+  int steps = degNum * degreeMultiplier;
+  if(degNum > 0){
+    digitalWrite(rotatorDirPin, HIGH);
+  }
+  else{
+    steps = steps * -1;
+    digitalWrite(rotatorDirPin, LOW);
+  }
+  for(int x = 0; x < steps; x++){
+    digitalWrite(rotatorStepPin,HIGH); 
+    delayMicroseconds(2000); 
+    digitalWrite(rotatorStepPin,LOW); 
+    delayMicroseconds(2000); 
   }
   digitalWrite(rotatorDirPin, LOW);
   
 }
-
 
 void serialEvent() {
   
@@ -76,22 +119,51 @@ void serialEvent() {
   }
 }
 
+/*
 void Solenoid(bool state){
   digitalWrite(solenoidPin, state);
 }
+*/
 
+void ServoState(bool state){ //if true, servo is up
+  if(state){
+    benderServo.write(servoDownValue);
+  }
+  else{
+    benderServo.write(140);
+  }
+}
 
 //size = tähden koko senteissä
 void doStar(int size){
 
-  //tänne vähän tähtikomentoja
+  //rotate_feeder_motor
+  //rotate_bend_motor
 
+  
   
 }
 
+void doSquare(int num){
+
+  move_bend_motor(-20);
+  rotate_feeder_motor(num);
+  rotate_bend_motor(110);
+  move_bend_motor(-110);
+  rotate_feeder_motor(num);
+  rotate_bend_motor(110);
+  move_bend_motor(-110);
+  rotate_feeder_motor(num);
+  rotate_bend_motor(110);
+  move_bend_motor(-110);
+  rotate_feeder_motor(num);
+  rotate_bend_motor(110);
+  move_bend_motor(-110);
+
+  Serial.println("cut it");
+}
+
 void loop() {
-  
-  // put your main code here, to run repeatedly:
 
    // print the string when a newline arrives:
   if (stringComplete) {
@@ -118,7 +190,8 @@ void loop() {
        Serial.println("ok");
 
        //rotataattee moottorea
-       rotate_feeder_motor(1, substring.toInt(), 2000);
+      // rotate_feeder_motor(0, substring.toInt(), 2000);
+      rotate_feeder_motor(substring.toInt());
       
     }
 
@@ -138,9 +211,39 @@ void loop() {
      rotate_bend_motor(degree_substring.toInt());
       
     }
+
+     else if(inputString.indexOf("move") != -1){
+
+     String degree_substring = inputString.substring(5);
+
+     Serial.println("degree value is:");
+     Serial.println(degree_substring);
+       
+     Serial.println("ok");
+     
+     move_bend_motor(degree_substring.toInt());
+      
+    }
+
+    else if(inputString.indexOf("set") != -1){
+
+     String valueSubString = inputString.substring(4);
+
+     Serial.println("new value is:");
+     Serial.println(valueSubString);
+       
+     Serial.println("ok");
+     
+     servoDownValue = (valueSubString.toInt());
+      
+    }
     
-    
-    
+    else if(inputString.indexOf("square") != -1){
+      String size_substring = inputString.substring(6);
+      Serial.println("size:");
+      Serial.println(size_substring.toInt());
+      doSquare(size_substring.toInt());
+    }
     else{
 
        Serial.println("unknown command");
@@ -151,7 +254,7 @@ void loop() {
     inputString = "";
     stringComplete = false;
 
-    rotate_feeder_motor(1, 200, 2000);
+    //rotate_feeder_motor(1, 200, 2000);
       
     }
     
