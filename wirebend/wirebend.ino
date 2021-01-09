@@ -79,9 +79,6 @@ void rotate_bend_motor(int degNum){
   //Solenoid(HIGH);
   ServoState(false);
   delay(200);
-
-  //move_bend_motor((degNum*(-1))/1);
-  //move_bend_motor(degNum+30);
 }
 
 void move_bend_motor(int degNum){
@@ -134,16 +131,6 @@ void ServoState(bool state){ //if true, servo is up
   }
 }
 
-//size = tähden koko senteissä
-void doStar(int size){
-
-  //rotate_feeder_motor
-  //rotate_bend_motor
-
-  
-  
-}
-
 void doSquare(int num){
 
   move_bend_motor(-20);
@@ -172,33 +159,20 @@ void loop() {
     Serial.println(inputString);
 
     //process string
-    if(inputString.indexOf("star") != -1){
-      Serial.println("ok");
-      doStar(5);
-    }
-
-
-
-    
-    else if(inputString.indexOf("feed") != -1){
+    if(inputString.indexOf("feed") != -1){
 
      String substring = inputString.substring(5);
 
        //Serial.println("value is:");
        Serial.println(substring);
-       
        Serial.println("ok");
-
-       //rotataattee moottorea
-      // rotate_feeder_motor(0, substring.toInt(), 2000);
-      rotate_feeder_motor(substring.toInt());
+       rotate_feeder_motor(substring.toInt());
       
     }
 
     //example command: bend 90
     //kääntää 90 astetta oikealle
     // bend -90 kääntää vasemmalle
-    
      else if(inputString.indexOf("bend") != -1){
 
      String degree_substring = inputString.substring(5);
@@ -212,6 +186,7 @@ void loop() {
       
     }
 
+     // same as bend but without raising servo
      else if(inputString.indexOf("move") != -1){
 
      String degree_substring = inputString.substring(5);
@@ -225,6 +200,7 @@ void loop() {
       
     }
 
+    // set new maximum value to set the servo to. 
     else if(inputString.indexOf("set") != -1){
 
      String valueSubString = inputString.substring(4);
@@ -245,18 +221,11 @@ void loop() {
       doSquare(size_substring.toInt());
     }
     else{
-
        Serial.println("unknown command");
-       
     }
 
-      // clear the string:
+    // clear the string:
     inputString = "";
     stringComplete = false;
-
-    //rotate_feeder_motor(1, 200, 2000);
-      
     }
-    
-  
   }
